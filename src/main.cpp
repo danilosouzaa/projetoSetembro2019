@@ -1,0 +1,189 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <float.h>
+#include <string.h>
+#include <math.h>
+#include <sys/time.h>
+#include <omp.h>
+
+extern "C"
+{
+#include "lp.h"
+#include "prepareCpu.h"
+#include "structSolution.h"
+#include "structBasicsCuts.h"
+}
+
+int main(int argc, const char *argv[])
+{
+    int i;
+    int cg1 = 0, cg2 = 0, cc = 0;
+    if (argc < 12)
+    {
+        printf("Number of parameters invalided\n");
+        printf("[1] - Instance Name \n");
+        printf("[2] - Precison of xAsterisc\n");
+        printf("[3] - Time Maximal of test \n");
+        printf("[4] - Max Coef Phase 1\n");
+        printf("[5] - Size Group Phase 2\n");
+        printf("[6] - number of runs Phase 2\n");
+        printf("[7] - max Denominator of Phase 2\n");
+        printf("[8-11] - weight's common,  of Phase 2\n");
+        printf("[12] - number of cc tests\n");
+        return 0;
+    }
+    for (i = 0; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-CG1") == 0)
+        {
+            cg1 = 1;
+        }
+        if (strcmp(argv[i], "-CG2") == 0)
+        {
+            cg2 = 1;
+        }
+        if (strcmp(argv[i], "-CC") == 0)
+        {
+            cc = 1;
+        }
+    }
+    char nameFileInstance[255] = "../inst/";
+    char nameInst[255] = "";
+    int precision = atoi(argv[2]);
+    double timeMax = atof(argv[3]);
+    int limitCoefPhase1 = atoi(argv[4]);
+    int sizeGroupConstraintsPhase2 = atoi(argv[5]);
+    int nRunsPhase2 = atoi(argv[6]);
+    int maxDenominator = atoi(argv[7]);
+    float weightVariablesCommon = atof(argv[8]);
+    float weightVariablesCoef = atof(argv[9]);
+    float weightVariablesSignal = atof(argv[10]);
+    float weightVariablesFrac = atof(argv[11]);
+    int szPerThreads = atoi(argv[12]);
+    strcat(nameInst, argv[1]);
+    strcat(nameFileInstance, argv[1]);
+
+    LinearProgram *lp = lp_create();
+    lp_read(lp, nameFileInstance);
+    //---------------------------------------------------------------------------------------
+    //-------------Allocation strings of nameContraints and nameVariables--------------------
+    //---------------------------------------------------------------------------------------
+    int nVariables = lp_cols(lp);
+    int nConstraintsValided = countContraintsValided(lp);
+    TNameConstraints **nameConstraints = (TNameConstraints **)malloc(nConstraintsValided * sizeof(TNameConstraints *));
+    for (i = 0; i < nConstraintsValided; i++)
+    {
+        nameConstraints[i] = (TNameConstraints *)malloc(255 * sizeof(TNameConstraints));
+    }
+    TNameVariables **nameVariables = (TNameVariables **)malloc(nVariables * sizeof(TNameVariables *));
+    for (i = 0; i < nVariables; i++)
+    {
+        nameVariables[i] = (TNameVariables *)malloc(255 * sizeof(TNameVariables));
+        lp_col_name(lp, i, nameVariables[i]);
+    }
+    //---------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------
+    
+    //---------------------------------------------------------------------------------------
+    //--------------------------------------fill structs-------------------------------------
+    //---------------------------------------------------------------------------------------
+
+    cutFull *constraintsOriginal = fillStructPerLP(lp, nameConstraints, nameVariables);
+    TNumberConstraints numberConstraintsInitial = constraintsOriginal->numberConstraints;
+    TCont numberContInitial = constraintsOriginal->cont;
+    TNumberVariables numberVariablesInitial;
+    int numberCutsCG1 = 0, numberCutsCG2 = 0, numberCutsCC = 0, numberAux;
+    //showStructFull(constraintsOriginal,nameConstraints, nameVariables);
+    lp_write_lp(lp, "teste.lp");
+    double startT = omp_get_wtime();
+    double _time = 0;
+    _time = ((double)timeMax - (omp_get_wtime() - startT));
+    TNumberConstraints numberAuxConstraints;
+    TNumberConstraints totalCuts;
+    while (_time > 1)
+    {
+        //showStructSmall(constraintsSmall,nameConstraints,nameVariables);
+
+        //---------------------------------------------------------------------------------------
+        //-------------------------Call of methods CG and Cover----------------------------------
+        //---------------------------------------------------------------------------------------
+        numberAuxConstraints = constraintsOriginal->numberConstraints;
+        printf("Antes: %d\n", constraintsOriginal->numberConstraints);
+        if (cg1 == 1)
+        {
+            numberConstraintsInitial = constraintsOriginal->numberConstraints;
+            numberContInitial = constraintsOriginal->cont;
+
+
+            numberAux = constraintsOriginal->numberConstraints;
+            constraintsOriginal = runCG1_mainCpu(constraintsOriginal, precision, timeMax, limitCoefPhase1, numberConstraintsInitial, numberContInitial);
+            numberAux = constraintsOriginal->numberConstraints - numberAux;
+            nameConstraints = renamedNameConstraints(nameConstraints, 1, constraintsOriginal->numberConstraints, numberAux, numberCutsCG1);
+            numberCutsCG1 += numberAux;
+        }
+
+        if (cg2 == 1)
+        {
+            numberAux = constraintsOriginal->numberConstraints;
+            constraintsOriginal = runCG2_mainCpu(constraintsOriginal, precision, timeMax, sizeGroupConstraintsPhase2, nRunsPhase2, maxDenominator, 0, weightVariablesCommon, weightVariablesCoef, weightVariablesSignal, weightVariablesFrac);
+            numberAux = constraintsOriginal->numberConstraints - numberAux;
+            nameConstraints = renamedNameConstraints(nameConstraints, 2, constraintsOriginal->numberConstraints, numberAux, numberCutsCG2);
+            numberCutsCG2 += numberAux;
+        }
+        if (cc == 1)
+        {
+            int *convertVariables = (int *)malloc(sizeof(int) * constraintsOriginal->cont);
+            numberVariablesInitial = constraintsOriginal->numberVariables;
+            constraintsOriginal = removeNegativeCoefficientsAndSort(constraintsOriginal, convertVariables, precision);
+            numberAux = constraintsOriginal->numberConstraints;
+            constraintsOriginal = runCC_mainCPu(constraintsOriginal, precision, szPerThreads);
+            numberAux = constraintsOriginal->numberConstraints - numberAux;
+            nameConstraints = renamedNameConstraints(nameConstraints, 3, constraintsOriginal->numberConstraints, numberAux, numberCutsCC);
+            numberCutsCC += numberAux;
+            constraintsOriginal = returnVariablesOriginals(constraintsOriginal, convertVariables, precision, numberVariablesInitial);
+            //showStructFull(constraintsOriginal,nameConstraints,nameVariables);
+            free(convertVariables);
+        }
+        _time = ((double)timeMax - (omp_get_wtime() - startT));
+        totalCuts = constraintsOriginal->numberConstraints -  numberAuxConstraints;
+        printf("Cuts total: %d\n", totalCuts);
+        printf("Depois: %d\n", constraintsOriginal->numberConstraints);
+        if(totalCuts>=0){
+            insertConstraintsLP(lp,constraintsOriginal,numberAuxConstraints,nameConstraints);
+            lp_write_lp(lp, "danilo.lp");
+            lp_optimize_as_continuous(lp);
+            double *xTemp = lp_x(lp);
+            for(i=0; i<constraintsOriginal->numberVariables; i++)
+            {
+                constraintsOriginal->xAsterisc[i] = xTemp[i];
+            }
+           
+            printf("value: %f\n",lp_obj_value(lp));
+        }
+        
+
+
+    }
+    //  showStructFull(constraintsOriginal,nameConstraints,nameVariables);
+
+    //---------------------------------------------------------------------------------------
+    //-------------------------free of Allocation struct-------------------------------------
+    //---------------------------------------------------------------------------------------
+
+    for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+    {
+        free(nameConstraints[i]);
+    }
+    free(nameConstraints);
+
+    for (i = 0; i < constraintsOriginal->numberVariables; i++)
+    {
+        free(nameVariables[i]);
+    }
+    free(nameVariables);
+    freeStrCutFull(constraintsOriginal);
+    //---------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------
+    return 0;
+}
