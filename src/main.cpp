@@ -82,14 +82,38 @@ int main(int argc, const char *argv[])
         nameVariables[i] = (TNameVariables *)malloc(255 * sizeof(TNameVariables));
         lp_col_name(lp, i, nameVariables[i]);
     }
-    //---------------------------------------------------------------------------------------
-    //---------------------------------------------------------------------------------------
-    
-    //---------------------------------------------------------------------------------------
-    //--------------------------------------fill structs-------------------------------------
-    //---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------
+//--------------------------------------fill structs-------------------------------------
+//---------------------------------------------------------------------------------------
+
+// for(i=0;i<szSol;i++){
+//      printf("%lf\n",sol[i]);
+//      if(sol[i]!=0.0)
+//         getchar();
+//  }
+#ifdef DEBUG
+    lp_set_max_solutions(lp, 1);
+    lp_optimize(lp);
+    lp_write_sol(lp, "../sol/solutionTest.sol");
+    double *sol = readSolFile("../sol/solutionTest.sol", nVariables);
+
+#endif // DEBUG
 
     cutFull *constraintsOriginal = fillStructPerLP(lp, nameConstraints, nameVariables);
+#ifdef DEBUG
+
+    // for (i = 0; i < constraintsOriginal->numberVariables; i++)
+    // {
+    //     if (sol[i] != 0)
+    //     {
+    //         printf("%d %s = %lf\n", i, nameVariables[i], sol[i]);
+    //     }
+    // }
+    // getchar();
+#endif // DEBUG
     TNumberConstraints numberConstraintsInitial = constraintsOriginal->numberConstraints;
     TCont numberContInitial = constraintsOriginal->cont;
     TNumberVariables numberVariablesInitial;
@@ -103,24 +127,48 @@ int main(int argc, const char *argv[])
     TNumberConstraints totalCuts;
     while (_time > 1)
     {
-        //showStructSmall(constraintsSmall,nameConstraints,nameVariables);
+//showStructSmall(constraintsSmall,nameConstraints,nameVariables);
 
-        //---------------------------------------------------------------------------------------
-        //-------------------------Call of methods CG and Cover----------------------------------
-        //---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+//-------------------------Call of methods CG and Cover----------------------------------
+//---------------------------------------------------------------------------------------
+//showStructFull(constraintsOriginal,nameConstraints,nameVariables);
+#ifdef DEBUG
+
+        for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+        {
+            int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
+          
+            if (very == 0){
+                getchar();
+                  printf("validado antes: %d %s\n", very, nameConstraints[i]);
+            }
+        }
+
+#endif // DEBUG
         numberAuxConstraints = constraintsOriginal->numberConstraints;
-        printf("Antes: %d\n", constraintsOriginal->numberConstraints);
+
         if (cg1 == 1)
         {
             numberConstraintsInitial = constraintsOriginal->numberConstraints;
             numberContInitial = constraintsOriginal->cont;
-
 
             numberAux = constraintsOriginal->numberConstraints;
             constraintsOriginal = runCG1_mainCpu(constraintsOriginal, precision, timeMax, limitCoefPhase1, numberConstraintsInitial, numberContInitial);
             numberAux = constraintsOriginal->numberConstraints - numberAux;
             nameConstraints = renamedNameConstraints(nameConstraints, 1, constraintsOriginal->numberConstraints, numberAux, numberCutsCG1);
             numberCutsCG1 += numberAux;
+#ifdef DEBUG
+            for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+            {
+                int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
+                
+                if (very == 0){
+                    getchar();
+                    printf("validado depois: %d %s\n", very, nameConstraints[i]);
+                }
+            }
+#endif
         }
 
         if (cg2 == 1)
@@ -137,33 +185,47 @@ int main(int argc, const char *argv[])
             numberVariablesInitial = constraintsOriginal->numberVariables;
             constraintsOriginal = removeNegativeCoefficientsAndSort(constraintsOriginal, convertVariables, precision);
             numberAux = constraintsOriginal->numberConstraints;
+#ifdef DEBUG
+           constraintsOriginal = runCC_mainCPuDebug(constraintsOriginal, precision, szPerThreads, nameConstraints, nameVariables, sol);
+#else
             constraintsOriginal = runCC_mainCPu(constraintsOriginal, precision, szPerThreads);
+#endif // DEBUG
+
             numberAux = constraintsOriginal->numberConstraints - numberAux;
             nameConstraints = renamedNameConstraints(nameConstraints, 3, constraintsOriginal->numberConstraints, numberAux, numberCutsCC);
             numberCutsCC += numberAux;
             constraintsOriginal = returnVariablesOriginals(constraintsOriginal, convertVariables, precision, numberVariablesInitial);
+#ifdef DEBUG
+            for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+            {
+                int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
+                
+                if (very == 0){
+                    printf("validado depois: %d %s\n", very, nameConstraints[i]);
+                    getchar();
+                }
+            }
+#endif
             //showStructFull(constraintsOriginal,nameConstraints,nameVariables);
             free(convertVariables);
         }
         _time = ((double)timeMax - (omp_get_wtime() - startT));
-        totalCuts = constraintsOriginal->numberConstraints -  numberAuxConstraints;
+        totalCuts = constraintsOriginal->numberConstraints - numberAuxConstraints;
         printf("Cuts total: %d\n", totalCuts);
-        printf("Depois: %d\n", constraintsOriginal->numberConstraints);
-        if(totalCuts>=0){
-            insertConstraintsLP(lp,constraintsOriginal,numberAuxConstraints,nameConstraints);
+        printf("Depois: %d \n", constraintsOriginal->numberConstraints);
+        if (totalCuts >= 0)
+        {
+            insertConstraintsLP(lp, constraintsOriginal, numberAuxConstraints, nameConstraints);
             lp_write_lp(lp, "danilo.lp");
             lp_optimize_as_continuous(lp);
             double *xTemp = lp_x(lp);
-            for(i=0; i<constraintsOriginal->numberVariables; i++)
+            for (i = 0; i < constraintsOriginal->numberVariables; i++)
             {
                 constraintsOriginal->xAsterisc[i] = xTemp[i];
             }
-           
-            printf("value: %f\n",lp_obj_value(lp));
+
+            printf("value: %f\n", lp_obj_value(lp));
         }
-        
-
-
     }
     //  showStructFull(constraintsOriginal,nameConstraints,nameVariables);
 

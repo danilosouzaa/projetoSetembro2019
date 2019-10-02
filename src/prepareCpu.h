@@ -28,6 +28,14 @@ cutFull *runCC_mainCPu(cutFull *constraintsFull, int precision, int szCoverThrea
 
 void createSolutionsInitial(int *solution, int sz);
 
+void quicksortDouble(double *values, int began, int end);
+
+void createCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, int precision);
+
+#ifdef DEBUG
+cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, int szCoverThread, char **nameConstraints, char **nameVariables, double *sol);
+#endif // DEBUG
+
 EXTERN_C_END
 
 #endif

@@ -105,7 +105,7 @@ TCoefficients cutMaxDivisorCommonRec(TCoefficients m, TCoefficients n);
 
 void freeStrCutFull(cutFull *cut);
 
-int* calcCover(cutCover *h_cover, int *h_solution, int qnt_Cover_per_Thread, int tolerance);
+int *calcCover(cutCover *h_cover, int *h_solution, int tolerance);
 
 TNameConstraints **renamedNameConstraints(TNameConstraints **nameConstraints, int typeContraints, TNumberConstraints szNewConstraints, TNumberConstraints szCuts,TNumberConstraints lastCut);
 
@@ -120,6 +120,9 @@ cutFull *returnVariablesOriginals(cutFull *constraintsOriginal, int *convertVect
 void insertConstraintsLP(LinearProgramPtr lp, cutFull *constraintsOriginal, int nConstrainsInitial, char **nameConstraints);
 
 
+int verifyCutsValidatedPerSolutionInteger(cutFull *constraintsOriginal, int cut, double *sol, char **nameVariables);
+
+double* readSolFile(const char *name, int nVariables);
 
 EXTERN_C_END
 #endif
