@@ -28,12 +28,17 @@ cutFull *runCC_mainCPu(cutFull *constraintsFull, int precision, int szCoverThrea
 
 void createSolutionsInitial(int *solution, int sz);
 
-void quicksortDouble(double *values, int began, int end);
 
-void createCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, int precision);
+void createInitialCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, int precision, int constraint);
+
+//void createCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, int precision);
+
+int *createCoverGraspIndividual(cutSmall *constraintsSmall, int precision, TNumberConstraints constraint, int numberIteration, int szPoolCutsMax);
+
 
 #ifdef DEBUG
-cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, int szCoverThread, char **nameConstraints, char **nameVariables, double *sol);
+//cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, int szCoverThread, char **nameConstraints, char **nameVariables, double *sol);
+cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **nameConstraints, char **nameVariables, double *sol, int szPoolCutsMax, int nIterationGrasp);
 #endif // DEBUG
 
 EXTERN_C_END

@@ -52,6 +52,9 @@ cutFull* createCutsStrongPhaseTwo(cutSmall *constraintsSmall, cutFull *constrain
 
 cutFull* createCutsCover(cutSmall *constraintsSmall, cutFull *constraintsOriginal, cutCover *cutsCover, int *idc_Cover, int nCuts);
 
+cutFull* createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal, cutSmall *constraintsSmall, int *idc_Cover, int constraint, int nCuts);
+
+
 int verifyRepeated(cutFull *originalConstraints, int posCover);
 
 

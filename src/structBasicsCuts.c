@@ -977,3 +977,35 @@ double *readSolFile(const char *name, int nVariables)
     }
     return sol;
 }
+
+void quicksortDouble(double *values, int began, int end)
+{
+    int i, j;
+    double pivo, aux;
+    i = began;
+    j = end - 1;
+    pivo = values[(began + end) / 2];
+    while (i <= j)
+    {
+        while (values[i] > pivo && i < end)
+        {
+            i++;
+        }
+        while (values[j] < pivo && j > began)
+        {
+            j--;
+        }
+        if (i <= j)
+        {
+            aux = values[i];
+            values[i] = values[j];
+            values[j] = aux;
+            i++;
+            j--;
+        }
+    }
+    if (j > began)
+        quicksortDouble(values, began, j + 1);
+    if (i < end)
+        quicksortDouble(values, i, end);
+}

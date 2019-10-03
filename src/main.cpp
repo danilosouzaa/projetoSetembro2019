@@ -140,7 +140,7 @@ int main(int argc, const char *argv[])
             int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
           
             if (very == 0){
-                getchar();
+                //getchar();
                   printf("validado antes: %d %s\n", very, nameConstraints[i]);
             }
         }
@@ -164,7 +164,7 @@ int main(int argc, const char *argv[])
                 int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
                 
                 if (very == 0){
-                    getchar();
+                    //getchar();
                     printf("validado depois: %d %s\n", very, nameConstraints[i]);
                 }
             }
@@ -186,7 +186,7 @@ int main(int argc, const char *argv[])
             constraintsOriginal = removeNegativeCoefficientsAndSort(constraintsOriginal, convertVariables, precision);
             numberAux = constraintsOriginal->numberConstraints;
 #ifdef DEBUG
-           constraintsOriginal = runCC_mainCPuDebug(constraintsOriginal, precision, szPerThreads, nameConstraints, nameVariables, sol);
+           constraintsOriginal = runCC_mainCPuDebug(constraintsOriginal,precision, nameConstraints, nameVariables, sol, 20, 100);
 #else
             constraintsOriginal = runCC_mainCPu(constraintsOriginal, precision, szPerThreads);
 #endif // DEBUG
@@ -202,7 +202,7 @@ int main(int argc, const char *argv[])
                 
                 if (very == 0){
                     printf("validado depois: %d %s\n", very, nameConstraints[i]);
-                    getchar();
+                    //getchar();
                 }
             }
 #endif
@@ -244,6 +244,10 @@ int main(int argc, const char *argv[])
         free(nameVariables[i]);
     }
     free(nameVariables);
+    #ifdef DEBUG
+        free(sol);
+    #endif // DEBUG
+    
     freeStrCutFull(constraintsOriginal);
     //---------------------------------------------------------------------------------------
     //---------------------------------------------------------------------------------------

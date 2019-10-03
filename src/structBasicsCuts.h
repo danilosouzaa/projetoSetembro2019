@@ -124,5 +124,7 @@ int verifyCutsValidatedPerSolutionInteger(cutFull *constraintsOriginal, int cut,
 
 double* readSolFile(const char *name, int nVariables);
 
+void quicksortDouble(double *values, int began, int end);
+
 EXTERN_C_END
 #endif
