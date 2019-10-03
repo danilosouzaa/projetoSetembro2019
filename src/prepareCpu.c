@@ -671,7 +671,7 @@ void createSolutionsInitial(int *solution, int sz)
     }
 }
 
-void createCoverGRASP(int *solution, int sz,  cutSmall *constraintsSmall, int precision){
+void createInitialCoverGRASP(int *solution, int sz,  cutSmall *constraintsSmall, int precision){
     
     int i,j, szAux,el, aux, lhs;
     for(i=0;i<sz;i++){
@@ -714,6 +714,8 @@ void createCoverGRASP(int *solution, int sz,  cutSmall *constraintsSmall, int pr
 
     
 }
+
+
 
 
 double calcFO(int *solution, cutSmall *constraintsSmall, int precision, TNumberConstraints constraint){
