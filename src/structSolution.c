@@ -1133,18 +1133,24 @@ cutFull *createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal,
     {
         return constraintsOriginal;
     }
-   long int i = 0, j = 0, cont = 0, contConstraints = 0;
+    long int i = 0, j = 0, cont = 0, contConstraints = 0;
     int sz = constraintsOriginal->ElementsConstraints[constraint + 1] - constraintsOriginal->ElementsConstraints[constraint];
-    printf("%d %d\n", sz, nCuts);
-    
-    for (i = 0; i < cutsCover->cont; i++)
+   //printf("%d %d %d\n", sz, nCuts, cutsCover->cont);
+
+    for (i = 0; i < nCuts; i++)
     {
-        if (cutsCover->Coefficients[i] != 0)
-        {
-            cont++;
+        if (idc_Cover[i] == 1)
+        {   
+            contConstraints++;
+            for (j = cutsCover->ElementsConstraints[i]; j < cutsCover->ElementsConstraints[i + 1]; j++)
+            {
+                if (cutsCover->Coefficients[j] != 0)
+                {
+                    cont++;
+                }
+            }
         }
     }
-    contConstraints = nCuts;
     cutFull *outCutsNew = AllocStrCutFull(constraintsOriginal->cont + cont, constraintsOriginal->numberConstraints + contConstraints, constraintsOriginal->numberVariables);
     outCutsNew->ElementsConstraints[0] = constraintsOriginal->ElementsConstraints[0];
     for (i = 0; i < constraintsOriginal->numberConstraints; i++)
@@ -1182,12 +1188,13 @@ cutFull *createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal,
                 }
                 c_XSolution++;
             }
-
+            // printf("c_aux: %d\t", c_aux);
             outCutsNew->ElementsConstraints[aux + 1] = c_aux;
             aux++;
         }
+        // printf("\n");
     }
-
+    // printf("terminou\n");
     int *validated = (int *)malloc(sizeof(int) * outCutsNew->numberConstraints);
     validated[0] = 1;
     for (i = 1; i < outCutsNew->numberConstraints; i++)

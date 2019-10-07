@@ -1323,8 +1323,8 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
         //     printf("< = %d\n ", cutsCoverSolution->rightSide[w]);
         // }
 
-        constraintsFull = createCutsCoverGrasp(cutsCoverSolution, constraintsFull, newConstraintsSmall, idc_cover, i, qnt_cuts_cover);
-
+        //constraintsFull = createCutsCoverGrasp(cutsCoverSolution, constraintsFull, newConstraintsSmall, idc_cover, i, qnt_cuts_cover);
+        constraintsFull = createCutsCoverGrasp(cutsCoverSolution, constraintsFull, newConstraintsSmall, idc_cover, i, c_AuxSolution);
         free(cutsCoverSolution);
 
         free(idc_cover);

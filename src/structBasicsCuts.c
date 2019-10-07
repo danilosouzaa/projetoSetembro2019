@@ -727,7 +727,7 @@ cutFull *removeNegativeCoefficientsAndSort(cutFull *constraintsOriginal, int *co
 
 cutFull *returnVariablesOriginals(cutFull *constraintsOriginal, int *convertVector, int precision, int nVariablesInitial)
 {
-
+    printf("%d - nVariablesInitial\n",nVariablesInitial);
     cutFull *newConstraints = AllocStrCutFull(constraintsOriginal->cont, constraintsOriginal->numberConstraints, nVariablesInitial);
     int i, j, el;
     TRightSideFull rhs;
@@ -741,10 +741,10 @@ cutFull *returnVariablesOriginals(cutFull *constraintsOriginal, int *convertVect
         for (j = constraintsOriginal->ElementsConstraints[i]; j < constraintsOriginal->ElementsConstraints[i + 1]; j++)
         {
             el = constraintsOriginal->Elements[j];
+            printf("valor de el: %d\n",el);
             if (el >= nVariablesInitial)
             {
                 newConstraints->Coefficients[j] = constraintsOriginal->Coefficients[j] * (-1);
-
                 rhs -= constraintsOriginal->Coefficients[j];
                 newConstraints->Elements[j] = convertVector[el - nVariablesInitial];
                 newConstraints->xAsterisc[newConstraints->Elements[j]] = 1 - constraintsOriginal->xAsterisc[el]; //erro aqui
