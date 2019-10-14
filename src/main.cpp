@@ -118,8 +118,9 @@ int main(int argc, const char *argv[])
     TCont numberContInitial = constraintsOriginal->cont;
     TNumberVariables numberVariablesInitial;
     int numberCutsCG1 = 0, numberCutsCG2 = 0, numberCutsCC = 0, numberAux;
-    //showStructFull(constraintsOriginal,nameConstraints, nameVariables);
+    showStructFull(constraintsOriginal, nameConstraints, nameVariables);
     lp_write_lp(lp, "teste.lp");
+    getchar();
     double startT = omp_get_wtime();
     double _time = 0;
     _time = ((double)timeMax - (omp_get_wtime() - startT));
@@ -138,10 +139,11 @@ int main(int argc, const char *argv[])
         for (i = 0; i < constraintsOriginal->numberConstraints; i++)
         {
             int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
-          
-            if (very == 0){
+
+            if (very == 0)
+            {
                 //getchar();
-                  printf("validado antes: %d %s\n", very, nameConstraints[i]);
+                printf("validado antes: %d %s\n", very, nameConstraints[i]);
             }
         }
 
@@ -162,8 +164,9 @@ int main(int argc, const char *argv[])
             for (i = 0; i < constraintsOriginal->numberConstraints; i++)
             {
                 int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
-                
-                if (very == 0){
+
+                if (very == 0)
+                {
                     //getchar();
                     printf("validado depois: %d %s\n", very, nameConstraints[i]);
                 }
@@ -183,24 +186,41 @@ int main(int argc, const char *argv[])
         {
             int *convertVariables = (int *)malloc(sizeof(int) * constraintsOriginal->cont);
             numberVariablesInitial = constraintsOriginal->numberVariables;
+
             constraintsOriginal = removeNegativeCoefficientsAndSort(constraintsOriginal, convertVariables, precision);
+            int j;
+
             numberAux = constraintsOriginal->numberConstraints;
 #ifdef DEBUG
-           constraintsOriginal = runCC_mainCPuDebug(constraintsOriginal,precision, nameConstraints, nameVariables, sol, 20, 100);
+            constraintsOriginal = runCC_mainCPuDebug(constraintsOriginal, precision, nameConstraints, nameVariables, sol, 20, 100);
 #else
             constraintsOriginal = runCC_mainCPu(constraintsOriginal, precision, szPerThreads);
 #endif // DEBUG
+
+            for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+            {
+                printf("%d: ", i);
+                for (j = constraintsOriginal->ElementsConstraints[i]; j < constraintsOriginal->ElementsConstraints[i + 1]; j++)
+                {
+                    printf("%lf x%d + ", constraintsOriginal->Coefficients[j], constraintsOriginal->Elements[j]);
+                }
+                printf("<= %lf\n", constraintsOriginal->rightSide[i]);
+            }
+            getchar();
 
             numberAux = constraintsOriginal->numberConstraints - numberAux;
             nameConstraints = renamedNameConstraints(nameConstraints, 3, constraintsOriginal->numberConstraints, numberAux, numberCutsCC);
             numberCutsCC += numberAux;
             constraintsOriginal = returnVariablesOriginals(constraintsOriginal, convertVariables, precision, numberVariablesInitial);
+            //showStructFull(constraintsOriginal,nameConstraints,nameVariables);
+            //getchar();
 #ifdef DEBUG
             for (i = 0; i < constraintsOriginal->numberConstraints; i++)
             {
                 int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
-                
-                if (very == 0){
+
+                if (very == 0)
+                {
                     printf("validado depois: %d %s\n", very, nameConstraints[i]);
                     //getchar();
                 }
@@ -244,10 +264,10 @@ int main(int argc, const char *argv[])
         free(nameVariables[i]);
     }
     free(nameVariables);
-    #ifdef DEBUG
-        free(sol);
-    #endif // DEBUG
-    
+#ifdef DEBUG
+    free(sol);
+#endif // DEBUG
+
     freeStrCutFull(constraintsOriginal);
     //---------------------------------------------------------------------------------------
     //---------------------------------------------------------------------------------------

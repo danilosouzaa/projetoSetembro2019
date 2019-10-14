@@ -840,7 +840,7 @@ int *localSearch(int *solution, cutSmall *constraintsSmall, int precision, TNumb
             solutionAux[vAtv[j]] = 0;
             j++;
         }
-        if ((i == sz)||(j == aux1))
+        if ((i == sz) || (j == aux1))
         {
             free(solutionAux);
             free(vAtv);
@@ -1155,12 +1155,13 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
             // getchar();
             //int nC = cutsCover->ElementsConstraints[i + 1] - cutsCover->ElementsConstraints[i];
             // printf("tamanho de C: %d\n Tamanho de N: %d\n",qnt, nC);
-            //printf("fill Bag: %d \n rhs %d\n", fillBag[itePool], cutsCover->rightSide[i]);
+            //printf("fill Bag: %d \t rhs %d \t qnt %d \n", fillBag[itePool], cutsCover->rightSide[i], qnt);
             //getchar();
-            if ((fillBag[itePool] <= cutsCover->rightSide[i]) || (qnt <= 1) || (qnt == szConstraint))
+            if (fillBag[itePool] <= cutsCover->rightSide[i]) //|| (qnt <= 0) || (qnt == szConstraint))
             {
                 continue;
             }
+            //printf("fill Bag: %d \t rhs %d \t qnt %d \n", fillBag[itePool], cutsCover->rightSide[i], qnt);
             int *n_coef = (int *)malloc(sizeof(int) * qnt);
             int *n_el = (int *)malloc(sizeof(int) * qnt);
             qnt = 0;
@@ -1262,10 +1263,10 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
             // getchar();
 
             int ini = 0;
-            int flag = 0;
 
             for (w = cutsCover->ElementsConstraints[i]; w < cutsCover->ElementsConstraints[i + 1]; w++)
             {
+                int flag = 0;
                 //cutsCoverSolution->Coefficients[c_XSolution] = cutsCover->Coefficients[w];
                 for (ini = 0; ini < qnt; ini++)
                 {
@@ -1278,7 +1279,9 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
                 }
                 if (flag == 0)
                 {
-                    cutsCover->Coefficients[c_XSolution] = 1;
+                    printf("Aqui!");
+                    getchar();
+                    cutsCoverSolution->Coefficients[c_XSolution] = cutsCover->Coefficients[w];
                 }
                 c_XSolution++;
             }
@@ -1306,14 +1309,15 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
         int *idc_cover = (int *)malloc(sizeof(int) * c_AuxSolution);
         for (j = 0; j < c_AuxSolution; j++)
         {
-            idc_cover[j] = 0;
+            //idc_cover[j] = 0;
             //printf("cut: %d  - %d\n",cutsCover->rightSide[i], newConstraintsSmall->rightSide[i]);
-            if (cutsCoverSolution->rightSide[j] != newConstraintsSmall->rightSide[i])
-            {
-                idc_cover[j] = 1;
-                qnt_cuts_cover++;
-            }
+            //if (cutsCoverSolution->rightSide[j] != newConstraintsSmall->rightSide[i])
+            //{
+            idc_cover[j] = 1;
+            qnt_cuts_cover++;
+            //}
         }
+        //printf("Quantidade de Cuts: %d\n", qnt_cuts_cover);
         // for (w = 0; w < c_AuxSolution; w++)
         // {
         //     for (k = cutsCoverSolution->ElementsConstraints[w]; k < cutsCoverSolution->ElementsConstraints[w + 1]; k++)

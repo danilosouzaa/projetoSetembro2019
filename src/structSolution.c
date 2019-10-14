@@ -1130,7 +1130,7 @@ cutFull *createCutsCover(cutSmall *constraintsSmall, cutFull *constraintsOrigina
 cutFull *createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal, cutSmall *constraintsSmall, int *idc_Cover, int constraint, int nCuts)
 {
     if (nCuts <= 0)
-    {
+    {  
         return constraintsOriginal;
     }
     long int i = 0, j = 0, cont = 0, contConstraints = 0;
@@ -1151,6 +1151,7 @@ cutFull *createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal,
             }
         }
     }
+   // printf("cont: %d\n", cont);
     cutFull *outCutsNew = AllocStrCutFull(constraintsOriginal->cont + cont, constraintsOriginal->numberConstraints + contConstraints, constraintsOriginal->numberVariables);
     outCutsNew->ElementsConstraints[0] = constraintsOriginal->ElementsConstraints[0];
     for (i = 0; i < constraintsOriginal->numberConstraints; i++)
@@ -1171,7 +1172,9 @@ cutFull *createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal,
     int aux = constraintsOriginal->numberConstraints;
 
     int c_aux = constraintsOriginal->cont;
-    outCutsNew->ElementsConstraints[aux] = c_aux;
+    //printf("nCuts %d el con: %d c_aux: %d\n", nCuts, outCutsNew->ElementsConstraints[aux],c_aux);
+
+    //outCutsNew->ElementsConstraints[aux] = c_aux;
     for (i = 0; i < nCuts; i++)
     {
         if (idc_Cover[i] == 1)
@@ -1200,6 +1203,8 @@ cutFull *createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal,
     for (i = 1; i < outCutsNew->numberConstraints; i++)
     {
         validated[i] = verifyRepeated(outCutsNew, i);
+        // if(validated[i]==0)
+        //     printf("Validated = %d\n",validated[i]);
     }
     cont = 0, contConstraints = 0;
     for (i = 0; i < outCutsNew->numberConstraints; i++)
@@ -1213,8 +1218,10 @@ cutFull *createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal,
             }
         }
     }
+   // printf("xxx: %d %d\n", contConstraints,  constraintsOriginal->numberConstraints);
     if (contConstraints == outCutsNew->numberConstraints)
-    {
+    {   
+       // printf("AQUI!!\n");
         freeStrCutFull(constraintsOriginal);
         free(validated);
         return outCutsNew;

@@ -670,8 +670,6 @@ TNameConstraints **renamedNameConstraints(TNameConstraints **nameConstraints, in
 cutFull *removeNegativeCoefficientsAndSort(cutFull *constraintsOriginal, int *convertVector, int precision)
 {
     int i, j;
-    //convertVector = (int*)(malloc(sizeof(int)*h_cut->cont));
-    //  convertCoef = (int*)(malloc(sizeof(int)*h_cut->cont));
     int qntX = constraintsOriginal->numberVariables;
     int qntNegative = 0;
     TRightSideFull rhs = 0;
@@ -691,6 +689,7 @@ cutFull *removeNegativeCoefficientsAndSort(cutFull *constraintsOriginal, int *co
         newConstraints->xAsterisc[i] = constraintsOriginal->xAsterisc[i];
     }
 
+    newConstraints->ElementsConstraints[0] = 0;
     for (i = 0; i < constraintsOriginal->numberConstraints; i++)
     {
         rhs = constraintsOriginal->rightSide[i];
@@ -699,27 +698,24 @@ cutFull *removeNegativeCoefficientsAndSort(cutFull *constraintsOriginal, int *co
             if (constraintsOriginal->Coefficients[j] < 0)
             {
                 newConstraints->Coefficients[j] = constraintsOriginal->Coefficients[j] * (-1);
-
                 rhs += newConstraints->Coefficients[j];
+
                 newConstraints->Elements[j] = qntX;
                 el = constraintsOriginal->Elements[j];
                 newConstraints->xAsterisc[qntX] = 1 - constraintsOriginal->xAsterisc[el];
                 convertVector[qntX - constraintsOriginal->numberVariables] = constraintsOriginal->Elements[j];
-                //convertCoef[qntX-h_cut->numberVariables] = Cut_new->Coefficients[j];
                 qntX++;
             }
             else
             {
                 newConstraints->Coefficients[j] = constraintsOriginal->Coefficients[j];
                 newConstraints->Elements[j] = constraintsOriginal->Elements[j];
-                //convertVector[j] = 0 ;
-                //convertCoef[j] = 0;
             }
         }
         newConstraints->rightSide[i] = rhs;
-        newConstraints->ElementsConstraints[i] = constraintsOriginal->ElementsConstraints[i];
+        newConstraints->ElementsConstraints[i+1] = constraintsOriginal->ElementsConstraints[i+1];
     }
-    newConstraints->ElementsConstraints[i] = constraintsOriginal->ElementsConstraints[i];
+    
     SortByCoefficients(newConstraints);
     freeStrCutFull(constraintsOriginal);
     return newConstraints;
@@ -741,7 +737,7 @@ cutFull *returnVariablesOriginals(cutFull *constraintsOriginal, int *convertVect
         for (j = constraintsOriginal->ElementsConstraints[i]; j < constraintsOriginal->ElementsConstraints[i + 1]; j++)
         {
             el = constraintsOriginal->Elements[j];
-            printf("valor de el: %d\n",el);
+            //printf("valor de el: %d\n",el);
             if (el >= nVariablesInitial)
             {
                 newConstraints->Coefficients[j] = constraintsOriginal->Coefficients[j] * (-1);
@@ -945,6 +941,7 @@ int verifyCutsValidatedPerSolutionInteger(cutFull *constraintsOriginal, int cut,
     }
     else
     {
+        printf("lhs: %lf rhs: %lf\n", lhs, constraintsOriginal->rightSide[cut]);
         return 0;
     }
 }
