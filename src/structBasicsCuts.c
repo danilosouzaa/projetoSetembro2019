@@ -109,10 +109,19 @@ cutFull *fillStructPerLP(LinearProgram *lp, TNameConstraints **nameConstraints, 
     TNumberConstraints nConstraints, nConstraintsValided;
     TNumberVariables nVariables, nNonZeroValided = 0;
 
+
+
     nVariables = lp_cols(lp);
     nConstraints = lp_rows(lp);
-    nConstraintsValided = 0;
     int szConst, i, j;
+    int tsxt;
+    for(i = 0;i< nVariables; i++){
+        tsxt = lp_is_binary(lp,i);
+        printf("Teste: %d\n", tsxt);
+    }
+    
+    nConstraintsValided = 0;
+    
     TElements *idx = (TElements *)malloc(sizeof(TElements) * nVariables);
     double *coef = (double *)malloc(sizeof(double) * nVariables);
     for (i = 0; i < nConstraints; i++)
@@ -219,7 +228,9 @@ cutFull *fillStructPerLP(LinearProgram *lp, TNameConstraints **nameConstraints, 
                 idx[j] = 0;
             }
 
+            
             lp_row_name(lp, i, nameConstraints[contador]);
+            
             h_cut->ElementsConstraints[contador + 1] = aux;
             h_cut->rightSide[contador] = rhs;
             contador++;
@@ -319,6 +330,7 @@ cutFull *fillStructPerLP(LinearProgram *lp, TNameConstraints **nameConstraints, 
         }
     }
 
+    
     //free(xTemp);
     free(idx);
     free(coef);
@@ -527,18 +539,18 @@ void showStructFull(cutFull *constraintsFull, TNameConstraints **nameConstraints
             {
                 if (flag == 0)
                 {
-                    printf("%.2f %s ", constraintsFull->Coefficients[j], nameVariables[el]);
+                    printf("%.2f %s  = %lf ", constraintsFull->Coefficients[j], nameVariables[el], constraintsFull->xAsterisc[el]);
                     flag = 1;
                 }
                 else
                 {
-                    printf("+ %.2f %s ", constraintsFull->Coefficients[j], nameVariables[el]);
+                    printf("+ %.2f %s  = %lf ", constraintsFull->Coefficients[j], nameVariables[el],  constraintsFull->xAsterisc[el]);
                 }
             }
             else
             {
                 flag = 1;
-                printf("%.2f %s ", constraintsFull->Coefficients[j], nameVariables[el]);
+                printf("%.2f %s = %lf ", constraintsFull->Coefficients[j], nameVariables[el], constraintsFull->xAsterisc[el]);
             }
         }
         printf("<= %.2f\n", constraintsFull->rightSide[i]);

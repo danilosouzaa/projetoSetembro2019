@@ -103,6 +103,7 @@ int main(int argc, const char *argv[])
 #endif // DEBUG
 
     cutFull *constraintsOriginal = fillStructPerLP(lp, nameConstraints, nameVariables);
+    getchar();
 #ifdef DEBUG
 
     // for (i = 0; i < constraintsOriginal->numberVariables; i++)
@@ -120,7 +121,7 @@ int main(int argc, const char *argv[])
     int numberCutsCG1 = 0, numberCutsCG2 = 0, numberCutsCC = 0, numberAux;
     showStructFull(constraintsOriginal, nameConstraints, nameVariables);
     lp_write_lp(lp, "teste.lp");
-    getchar();
+    //getchar();
     double startT = omp_get_wtime();
     double _time = 0;
     _time = ((double)timeMax - (omp_get_wtime() - startT));
@@ -186,9 +187,30 @@ int main(int argc, const char *argv[])
         {
             int *convertVariables = (int *)malloc(sizeof(int) * constraintsOriginal->cont);
             numberVariablesInitial = constraintsOriginal->numberVariables;
-
             constraintsOriginal = removeNegativeCoefficientsAndSort(constraintsOriginal, convertVariables, precision);
-            int j;
+            int j,el_test;
+            double lhs_test;
+
+            for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+            {
+                lhs_test = 0;
+                for (j = constraintsOriginal->ElementsConstraints[i]; j < constraintsOriginal->ElementsConstraints[i + 1]; j++)
+                {   
+                    el_test = constraintsOriginal->Elements[j];
+                    lhs_test += constraintsOriginal->Coefficients[j] * constraintsOriginal->xAsterisc[el_test];
+                    printf("%lf x%d = %lf + ", constraintsOriginal->Coefficients[j], constraintsOriginal->Elements[j], constraintsOriginal->xAsterisc[el_test]);
+                }
+                printf("<= %lf\n", constraintsOriginal->rightSide[i]);
+                if(lhs_test - 1e-5 >constraintsOriginal->rightSide[i]){
+                    printf("ERRO na complementação: %lf %lf\n", lhs_test, constraintsOriginal->rightSide[i]);
+                    getchar();
+                }else{
+                    printf("OKKK: %lf %lf\n", lhs_test, constraintsOriginal->rightSide[i]);
+                }
+
+            }
+            getchar();
+
 
             numberAux = constraintsOriginal->numberConstraints;
 #ifdef DEBUG
