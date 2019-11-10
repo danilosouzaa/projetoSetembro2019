@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 
 #include "gpulib/types.h"
 #include "lp.h"
@@ -85,7 +86,8 @@ cutCover *AllocStrCover(TCont cont, TNumberConstraints nConstraints); //allocati
 
 cutCover *CopyCutToCover(cutSmall *h_cut); //Copy struct of cutSmall for cutCover
 
-cutFull *fillStructPerLP(LinearProgram *lp, TNameConstraints **nameConstraints, TNameVariables **nameVariables);
+//cutFull *fillStructPerLP(LinearProgram *lp, TNameConstraints **nameConstraints, TNameVariables **nameVariables);
+cutFull *fillStructPerLP(LinearProgram *lp, TNameConstraints **nameConstraints, TNameVariables **nameVariables, int *typeVariables, double *lbVariables, double *ubVariables);
 
 int countContraintsValided(LinearProgram *lp); //return of number contraints tranformated for <=
 
@@ -125,6 +127,10 @@ int verifyCutsValidatedPerSolutionInteger(cutFull *constraintsOriginal, int cut,
 double* readSolFile(const char *name, int nVariables);
 
 void quicksortDouble(double *values, int began, int end);
+
+int *returnBinaryConstraints(cutFull *constraintsOriginal, int *typeVariables);
+
+cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConstraints, int *typeVariables, double *lbVariables, double *ubVariables, int precision);
 
 EXTERN_C_END
 #endif

@@ -101,9 +101,10 @@ int main(int argc, const char *argv[])
     double *sol = readSolFile("../sol/solutionTest.sol", nVariables);
 
 #endif // DEBUG
-
-    cutFull *constraintsOriginal = fillStructPerLP(lp, nameConstraints, nameVariables);
-    getchar();
+    int *typeVariables = (int*)malloc(sizeof(int)*nVariables);
+    double *lbVariables = (double*)malloc(sizeof(double)*nVariables);
+    double *ubVariables = (double*)malloc(sizeof(double)*nVariables);
+    cutFull *constraintsOriginal = fillStructPerLP(lp, nameConstraints, nameVariables, typeVariables, lbVariables, ubVariables);
 #ifdef DEBUG
 
     // for (i = 0; i < constraintsOriginal->numberVariables; i++)
@@ -186,7 +187,21 @@ int main(int argc, const char *argv[])
         if (cc == 1)
         {
             int *convertVariables = (int *)malloc(sizeof(int) * constraintsOriginal->cont);
+            int *binaryConstraints = returnBinaryConstraints(constraintsOriginal,typeVariables);
+            int constraintsUsed = 0;
+            for(i=0;i<constraintsOriginal->numberConstraints;i++){
+                if(binaryConstraints[i]!=0){
+                    constraintsUsed++;
+                }
+                printf("binaryConstraints: %d\n", binaryConstraints[i]);
+            }
+            printf("Number Constraints Posible: %d\n", constraintsUsed);
+            getchar();
             numberVariablesInitial = constraintsOriginal->numberVariables;
+            
+
+
+
             constraintsOriginal = removeNegativeCoefficientsAndSort(constraintsOriginal, convertVariables, precision);
             int j,el_test;
             double lhs_test;
@@ -250,6 +265,7 @@ int main(int argc, const char *argv[])
 #endif
             //showStructFull(constraintsOriginal,nameConstraints,nameVariables);
             free(convertVariables);
+            free(binaryConstraints);
         }
         _time = ((double)timeMax - (omp_get_wtime() - startT));
         totalCuts = constraintsOriginal->numberConstraints - numberAuxConstraints;
@@ -289,7 +305,9 @@ int main(int argc, const char *argv[])
 #ifdef DEBUG
     free(sol);
 #endif // DEBUG
-
+    free(typeVariables);
+    free(lbVariables);
+    free(ubVariables);
     freeStrCutFull(constraintsOriginal);
     //---------------------------------------------------------------------------------------
     //---------------------------------------------------------------------------------------
