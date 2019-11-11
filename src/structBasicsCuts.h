@@ -130,7 +130,7 @@ void quicksortDouble(double *values, int began, int end);
 
 int *returnBinaryConstraints(cutFull *constraintsOriginal, int *typeVariables);
 
-cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConstraints, int *typeVariables, double *lbVariables, double *ubVariables, int precision);
+cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConstraints, int *typeVariables, double *lbVariables, double *ubVariables);
 
 EXTERN_C_END
 #endif

@@ -186,7 +186,9 @@ int main(int argc, const char *argv[])
         }
         if (cc == 1)
         {
-            int *convertVariables = (int *)malloc(sizeof(int) * constraintsOriginal->cont);
+
+       
+            
             int *binaryConstraints = returnBinaryConstraints(constraintsOriginal,typeVariables);
             int constraintsUsed = 0;
             for(i=0;i<constraintsOriginal->numberConstraints;i++){
@@ -196,7 +198,11 @@ int main(int argc, const char *argv[])
                 printf("binaryConstraints: %d\n", binaryConstraints[i]);
             }
             printf("Number Constraints Posible: %d\n", constraintsUsed);
+            
+            cutFull *constraintsBinary = convertBinaryConstraints(constraintsOriginal,binaryConstraints,typeVariables,lbVariables,ubVariables);
+            printf("new Constraints: %d\n", constraintsBinary->numberConstraints);
             getchar();
+            int *convertVariables = (int *)malloc(sizeof(int) * constraintsOriginal->cont);
             numberVariablesInitial = constraintsOriginal->numberVariables;
             
 

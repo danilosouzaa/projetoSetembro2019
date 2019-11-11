@@ -676,7 +676,7 @@ TNameConstraints **renamedNameConstraints(TNameConstraints **nameConstraints, in
     return newNameConstraints;
 }
 
-cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConstraints, int *typeVariables, double *lbVariables, double *ubVariables, int precision)
+cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConstraints, int *typeVariables, double *lbVariables, double *ubVariables)
 {
     int i, j, el;
     int contConstraints, newCont, contAux;;
