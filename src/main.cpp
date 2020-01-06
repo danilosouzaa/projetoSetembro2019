@@ -19,7 +19,7 @@ int main(int argc, const char *argv[])
 {
     int i;
     int cg1 = 0, cg2 = 0, cc = 0;
-    if (argc < 12)
+    if (argc < 13)
     {
         printf("Number of parameters invalided\n");
         printf("[1] - Instance Name \n");
@@ -31,6 +31,7 @@ int main(int argc, const char *argv[])
         printf("[7] - max Denominator of Phase 2\n");
         printf("[8-11] - weight's common,  of Phase 2\n");
         printf("[12] - number of cc tests\n");
+        printf("[13] - number iteration Grasp CC\n");
         return 0;
     }
     for (i = 0; i < argc; i++)
@@ -60,9 +61,13 @@ int main(int argc, const char *argv[])
     float weightVariablesCoef = atof(argv[9]);
     float weightVariablesSignal = atof(argv[10]);
     float weightVariablesFrac = atof(argv[11]);
-    int szPerThreads = atoi(argv[12]);
+    int szPoolCutsMaxCC = atoi(argv[12]);
+    int nIterationCCGrasp = atoi(argv[13]);
+
     strcat(nameInst, argv[1]);
     strcat(nameFileInstance, argv[1]);
+
+
 
     LinearProgram *lp = lp_create();
     lp_read(lp, nameFileInstance);
@@ -120,7 +125,7 @@ int main(int argc, const char *argv[])
     TCont numberContInitial = constraintsOriginal->cont;
     TNumberVariables numberVariablesInitial;
     int numberCutsCG1 = 0, numberCutsCG2 = 0, numberCutsCC = 0, numberAux;
-    showStructFull(constraintsOriginal, nameConstraints, nameVariables);
+    //showStructFull(constraintsOriginal, nameConstraints, nameVariables);
     lp_write_lp(lp, "teste.lp");
     //getchar();
     double startT = omp_get_wtime();
@@ -128,6 +133,11 @@ int main(int argc, const char *argv[])
     _time = ((double)timeMax - (omp_get_wtime() - startT));
     TNumberConstraints numberAuxConstraints;
     TNumberConstraints totalCuts;
+    lp_optimize_as_continuous(lp);
+     double iniObjSol = lp_obj_value(lp);
+    printf("Solution initial: %f \n",iniObjSol);
+
+
     while (_time > 1)
     {
 //showStructSmall(constraintsSmall,nameConstraints,nameVariables);
@@ -187,76 +197,82 @@ int main(int argc, const char *argv[])
         if (cc == 1)
         {
 
-       
-            
             int *binaryConstraints = returnBinaryConstraints(constraintsOriginal,typeVariables);
             int constraintsUsed = 0;
             for(i=0;i<constraintsOriginal->numberConstraints;i++){
                 if(binaryConstraints[i]!=0){
                     constraintsUsed++;
                 }
-                printf("binaryConstraints: %d\n", binaryConstraints[i]);
+                //printf("binaryConstraints: %d\n", binaryConstraints[i]);
             }
-            printf("Number Constraints Posible: %d\n", constraintsUsed);
+            //printf("Number Constraints Posible: %d\n", constraintsUsed);
             
             cutFull *constraintsBinary = convertBinaryConstraints(constraintsOriginal,binaryConstraints,typeVariables,lbVariables,ubVariables);
-            printf("new Constraints: %d\n", constraintsBinary->numberConstraints);
-            getchar();
-            int *convertVariables = (int *)malloc(sizeof(int) * constraintsOriginal->cont);
-            numberVariablesInitial = constraintsOriginal->numberVariables;
-            
+            printf("Constraints Original: %d \n new Constraints: %d\n", constraintsOriginal->numberConstraints, constraintsBinary->numberConstraints);
+            int nInitialBinary = constraintsBinary->numberConstraints;
+            int *convertVariables = (int *)malloc(sizeof(int) * constraintsBinary->cont);
+            numberVariablesInitial = constraintsBinary->numberVariables;
 
+            constraintsBinary = removeNegativeCoefficientsAndSort(constraintsBinary, convertVariables, precision);
+            // int j,el_test;
+            // double lhs_test;
 
-
-            constraintsOriginal = removeNegativeCoefficientsAndSort(constraintsOriginal, convertVariables, precision);
-            int j,el_test;
-            double lhs_test;
-
-            for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+ /*          for (i = 0; i < constraintsBinary->numberConstraints; i++)
             {
                 lhs_test = 0;
-                for (j = constraintsOriginal->ElementsConstraints[i]; j < constraintsOriginal->ElementsConstraints[i + 1]; j++)
+                for (j = constraintsBinary->ElementsConstraints[i]; j < constraintsBinary->ElementsConstraints[i + 1]; j++)
                 {   
-                    el_test = constraintsOriginal->Elements[j];
-                    lhs_test += constraintsOriginal->Coefficients[j] * constraintsOriginal->xAsterisc[el_test];
-                    printf("%lf x%d = %lf + ", constraintsOriginal->Coefficients[j], constraintsOriginal->Elements[j], constraintsOriginal->xAsterisc[el_test]);
+                    el_test = constraintsBinary->Elements[j];
+                    lhs_test += constraintsBinary->Coefficients[j] * constraintsBinary->xAsterisc[el_test];
+                    printf("%lf x%d = %lf %d + ", constraintsBinary->Coefficients[j], constraintsBinary->Elements[j], constraintsBinary->xAsterisc[el_test], typeVariables[el_test]);
                 }
-                printf("<= %lf\n", constraintsOriginal->rightSide[i]);
-                if(lhs_test - 1e-5 >constraintsOriginal->rightSide[i]){
-                    printf("ERRO na complementação: %lf %lf\n", lhs_test, constraintsOriginal->rightSide[i]);
+                printf("<= %lf\n", constraintsBinary->rightSide[i]);
+                if(lhs_test - 1e-5 >constraintsBinary->rightSide[i]){
+                    printf("ERRO na complementação: %lf %lf\n", lhs_test, constraintsBinary->rightSide[i]);
                     getchar();
                 }else{
-                    printf("OKKK: %lf %lf\n", lhs_test, constraintsOriginal->rightSide[i]);
+                    printf("OKKK: %lf %lf\n", lhs_test, constraintsBinary->rightSide[i]);
                 }
 
-            }
-            getchar();
+            }*/
+            //showStructFull(constraintsBinary,nameConstraints,nameVariables);
+            // for(i=0;i<constraintsBinary->numberVariables;i++){
+            //     printf("%s %f %f-- ", nameVariables[i],lbVariables[i], ubVariables[i]);
+            // }
+           // getchar();
 
 
-            numberAux = constraintsOriginal->numberConstraints;
+            
+            numberAux = constraintsBinary->numberConstraints;
 #ifdef DEBUG
-            constraintsOriginal = runCC_mainCPuDebug(constraintsOriginal, precision, nameConstraints, nameVariables, sol, 20, 100);
+            constraintsBinary = runCC_mainCPuDebug(constraintsBinary, precision, nameConstraints, nameVariables, sol, szPoolCutsMaxCC, nIterationCCGrasp);
 #else
-            constraintsOriginal = runCC_mainCPu(constraintsOriginal, precision, szPerThreads);
+            constraintsBinary = runCC_mainCPu(constraintsBinary, precision, szPoolCutsMaxCC);
 #endif // DEBUG
 
-            for (i = 0; i < constraintsOriginal->numberConstraints; i++)
-            {
-                printf("%d: ", i);
-                for (j = constraintsOriginal->ElementsConstraints[i]; j < constraintsOriginal->ElementsConstraints[i + 1]; j++)
-                {
-                    printf("%lf x%d + ", constraintsOriginal->Coefficients[j], constraintsOriginal->Elements[j]);
-                }
-                printf("<= %lf\n", constraintsOriginal->rightSide[i]);
-            }
-            getchar();
+            // for (i = 0; i < constraintsBinary->numberConstraints; i++)
+            // {
+            //     printf("%d: ", i);
+            //     for (j = constraintsBinary->ElementsConstraints[i]; j < constraintsBinary->ElementsConstraints[i + 1]; j++)
+            //     {
+            //         printf("%lf x%d + ", constraintsBinary->Coefficients[j], constraintsBinary->Elements[j]);
+            //     }
+            //     printf("<= %lf\n", constraintsBinary->rightSide[i]);
+            // }
+            // getchar();
 
-            numberAux = constraintsOriginal->numberConstraints - numberAux;
+            numberAux = constraintsBinary->numberConstraints - numberAux;
+
+            constraintsBinary = returnVariablesOriginals(constraintsBinary, convertVariables, precision, numberVariablesInitial);
+
+            constraintsOriginal = convertBinaryOfOriginalConstraints(constraintsOriginal, constraintsBinary, nInitialBinary);
+
             nameConstraints = renamedNameConstraints(nameConstraints, 3, constraintsOriginal->numberConstraints, numberAux, numberCutsCC);
             numberCutsCC += numberAux;
-            constraintsOriginal = returnVariablesOriginals(constraintsOriginal, convertVariables, precision, numberVariablesInitial);
-            //showStructFull(constraintsOriginal,nameConstraints,nameVariables);
-            //getchar();
+
+            freeStrCutFull(constraintsBinary);
+            // showStructFull(constraintsOriginal,nameConstraints,nameVariables);
+            // getchar();
 #ifdef DEBUG
             for (i = 0; i < constraintsOriginal->numberConstraints; i++)
             {
@@ -315,6 +331,8 @@ int main(int argc, const char *argv[])
     free(lbVariables);
     free(ubVariables);
     freeStrCutFull(constraintsOriginal);
+    _time = (omp_get_wtime() - startT);
+    printf("Time final: %f\n", _time);
     //---------------------------------------------------------------------------------------
     //---------------------------------------------------------------------------------------
     return 0;

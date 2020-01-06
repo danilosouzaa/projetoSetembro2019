@@ -1134,7 +1134,7 @@ cutFull *createCutsCoverGrasp(cutCover *cutsCover, cutFull *constraintsOriginal,
         return constraintsOriginal;
     }
     long int i = 0, j = 0, cont = 0, contConstraints = 0;
-    int sz = constraintsOriginal->ElementsConstraints[constraint + 1] - constraintsOriginal->ElementsConstraints[constraint];
+    // int sz = constraintsOriginal->ElementsConstraints[constraint + 1] - constraintsOriginal->ElementsConstraints[constraint];
    //printf("%d %d %d\n", sz, nCuts, cutsCover->cont);
 
     for (i = 0; i < nCuts; i++)

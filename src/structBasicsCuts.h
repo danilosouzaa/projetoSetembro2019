@@ -132,5 +132,7 @@ int *returnBinaryConstraints(cutFull *constraintsOriginal, int *typeVariables);
 
 cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConstraints, int *typeVariables, double *lbVariables, double *ubVariables);
 
+cutFull *convertBinaryOfOriginalConstraints(cutFull *constraintsOriginal, cutFull *constraintsBinary, int nInitialBinary);
+
 EXTERN_C_END
 #endif

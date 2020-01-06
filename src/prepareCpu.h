@@ -29,7 +29,7 @@ cutFull *runCC_mainCPu(cutFull *constraintsFull, int precision, int szCoverThrea
 void createSolutionsInitial(int *solution, int sz);
 
 
-void createInitialCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, int precision, int constraint);
+void createInitialCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, int precision, int constraint, float alpha);
 
 //void createCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, int precision);
 

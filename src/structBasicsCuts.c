@@ -448,9 +448,7 @@ cutSmall *reduceCutFullForCutSmall(cutFull *constraints, int *typeIntOrFloat, in
 {
     TNumberConstraints numberConstraintsSmall = 0;
     TCont cont = 0;
-    int szNonZero, i, j, res, cont_aux;
-    double aux;
-    TElements el = 0;
+    int  i, j, cont_aux;
     fflush(stdin);
     for (i = 0; i < constraints->numberConstraints; i++)
     {
@@ -598,7 +596,7 @@ TCoefficients cutMaxDivisorCommonRec(TCoefficients m, TCoefficients n)
 int *calcCover(cutCover *h_cover, int *h_solution, int tolerance)
 {
     int *fillBag = (int *)malloc(sizeof(int) * h_cover->numberConstraints);
-    int i, j, k, counter = 0;
+    int i, k, counter = 0;
 
     for (i = 0; i < h_cover->numberConstraints; i++)
     {
@@ -681,7 +679,7 @@ cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConst
     int i, j, el;
     int contConstraints, newCont, contAux;;
     int *constraintsAvalible = (int*)malloc(sizeof(int)*constraintsOriginal->numberConstraints);
-    double coef;
+  
     contConstraints = 0;
     newCont = 0;
     for (i = 0; i < constraintsOriginal->numberConstraints; i++)
@@ -705,7 +703,7 @@ cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConst
                 }
             }
             if(contAux>=2){
-                newCont+=contAux;
+                newCont += contAux;
                 contConstraints++;
                 constraintsAvalible[i] = 1;
 
@@ -747,7 +745,7 @@ cutFull *convertBinaryConstraints(cutFull *constraintsOriginal, int *BinaryConst
                 }
             }
             constraintsBinary->ElementsConstraints[contConstraints+1] = newCont;
-            constraintsBinary->rightSide[contConstraints] = constraintsOriginal->rightSide[i]+ rhsTemp;
+            constraintsBinary->rightSide[contConstraints] = constraintsOriginal->rightSide[i] + rhsTemp;
             contConstraints++;
         }
     }
@@ -815,7 +813,7 @@ cutFull *removeNegativeCoefficientsAndSort(cutFull *constraintsOriginal, int *co
 
 cutFull *returnVariablesOriginals(cutFull *constraintsOriginal, int *convertVector, int precision, int nVariablesInitial)
 {
-    printf("%d - nVariablesInitial\n", nVariablesInitial);
+    //printf("%d - nVariablesInitial\n", nVariablesInitial);
     cutFull *newConstraints = AllocStrCutFull(constraintsOriginal->cont, constraintsOriginal->numberConstraints, nVariablesInitial);
     int i, j, el;
     TRightSideFull rhs;
@@ -851,6 +849,51 @@ cutFull *returnVariablesOriginals(cutFull *constraintsOriginal, int *convertVect
     freeStrCutFull(constraintsOriginal);
     return newConstraints;
 }
+
+
+cutFull *convertBinaryOfOriginalConstraints(cutFull *constraintsOriginal, cutFull *constraintsBinary, int nInitialBinary){
+    TNumberConstraints sizeNew = constraintsOriginal->numberConstraints + (constraintsBinary->numberConstraints - nInitialBinary);
+    TCont contNew = constraintsOriginal->cont;
+    int i,j, jTemp;;
+    for(i = nInitialBinary; i< constraintsBinary->numberConstraints;i++){
+        contNew += constraintsBinary->ElementsConstraints[i+1] - constraintsBinary->ElementsConstraints[i];
+    }
+    if(constraintsBinary->numberConstraints - nInitialBinary==0){
+        return constraintsOriginal;
+    }
+    cutFull *newConstraintsOriginal = AllocStrCutFull(contNew, sizeNew, constraintsOriginal->numberVariables);
+
+    for (j=0;j<constraintsOriginal->numberVariables;j++){
+        newConstraintsOriginal->xAsterisc[j] = constraintsOriginal->xAsterisc[j];
+    }
+    newConstraintsOriginal->ElementsConstraints[0] = constraintsOriginal->ElementsConstraints[0];
+    for(i=0;i<constraintsOriginal->numberConstraints;i++){
+        newConstraintsOriginal->ElementsConstraints[i+1] = constraintsOriginal->ElementsConstraints[i+1];
+        newConstraintsOriginal->rightSide[i] = constraintsOriginal->rightSide[i];
+        for(j = constraintsOriginal->ElementsConstraints[i]; j<  constraintsOriginal->ElementsConstraints[i+1]; j++){
+            newConstraintsOriginal->Coefficients[j] = constraintsOriginal->Coefficients[j];
+            newConstraintsOriginal->Elements[j] = constraintsOriginal->Elements[j];
+        }
+    }
+    contNew  = newConstraintsOriginal->ElementsConstraints[i];
+    jTemp = constraintsOriginal->numberConstraints;
+    for(i = nInitialBinary;i<constraintsBinary->numberConstraints;i++){
+        for(j=constraintsBinary->ElementsConstraints[i]; j<constraintsBinary->ElementsConstraints[i+1];j++){
+            newConstraintsOriginal->Coefficients[contNew] = constraintsBinary->Coefficients[j];
+            newConstraintsOriginal->Elements[contNew] = constraintsBinary->Elements[j];       
+            contNew++;
+        }
+        newConstraintsOriginal->ElementsConstraints[jTemp+1] = contNew;
+        newConstraintsOriginal->rightSide[jTemp] = constraintsBinary->rightSide[i];
+        jTemp++;
+    }
+
+
+
+    freeStrCutFull(constraintsOriginal);
+    return newConstraintsOriginal;
+}
+
 
 void SortByCoefficients(cutFull *h_cut)
 {
@@ -1120,7 +1163,7 @@ int *returnBinaryConstraints(cutFull *constraintsOriginal, int *typeVariables)
                 qntBin++;
             }
         }
-        if (qntNBin > qntBin)
+        if (qntBin < 3)
         {
             BinaryConstraints[i] = 0;
         }
