@@ -119,8 +119,9 @@ void quicksortCof(TCoefficientsFull *values, int *idc, int began, int end);
 
 cutFull *returnVariablesOriginals(cutFull *constraintsOriginal, int *convertVector, int precision, int nVariablesInitial );
 
-void insertConstraintsLP(LinearProgramPtr lp, cutFull *constraintsOriginal, int nConstrainsInitial, char **nameConstraints);
+//void insertConstraintsLP(LinearProgramPtr lp, cutFull *constraintsOriginal, int nConstrainsInitial, char **nameConstraints);
 
+void insertConstraintsLP(LinearProgramPtr lp, cutFull *constraintsOriginal, int nConstrainsInitial, char **nameConstraints, int *verifyBug);
 
 int verifyCutsValidatedPerSolutionInteger(cutFull *constraintsOriginal, int cut, double *sol, char **nameVariables);
 

@@ -33,12 +33,15 @@ void createInitialCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, 
 
 //void createCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, int precision);
 
-int *createCoverGraspIndividual(cutSmall *constraintsSmall, int precision, TNumberConstraints constraint, int numberIteration, int szPoolCutsMax);
+int *createCoverGraspIndividual(cutSmall *constraintsSmall, int precision, TNumberConstraints constraint, int numberIteration, int szPoolCutsMax, float alpha);
 
+void copyAndVerifyPoolSolution(int *solution, int sz, int *poolSolution, int *numberSolutionAtual);
+
+int *localSearch(int *solution, int sz, cutSmall *constraintsSmall, int precision, TNumberConstraints constraint);
 
 #ifdef DEBUG
 //cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, int szCoverThread, char **nameConstraints, char **nameVariables, double *sol);
-cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **nameConstraints, char **nameVariables, double *sol, int szPoolCutsMax, int nIterationGrasp);
+cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **nameConstraints, char **nameVariables, double *sol, int szPoolCutsMax, int nIterationGrasp, float alpha);
 #endif // DEBUG
 
 EXTERN_C_END

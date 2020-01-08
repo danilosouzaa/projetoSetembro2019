@@ -718,8 +718,8 @@ void createInitialCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, 
         }
 
         value_best = c_max - alpha*(c_max - c_min);
-        //printf("\nc_max %f c_min %f alpha %f\n", c_max, c_min, alpha);
-        //printf("%d-Value Best: %f\n",test, value_best);
+        // printf("\nc_max %f c_min %f alpha %f\n", c_max, c_min, alpha);
+        // printf("%d-Value Best: %f\n",test, value_best);
         test++;
         int *setTemp  = (int*)malloc(szAux*sizeof(int));
         int *posTemp = (int*)malloc(szAux*sizeof(int));
@@ -733,17 +733,21 @@ void createInitialCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, 
                 aux_t++;
             }
         }
+        // printf("%d %d\n", szAux, aux_t);
         int itemAdd = rand() % aux_t;
         el = setTemp[itemAdd] - constraintsSmall->ElementsConstraints[constraint];
+        // printf("el: %d\n", el);
         solution[el] = 1;
         szAux--;
         lhs += constraintsSmall->Coefficients[ setTemp[itemAdd] ];
+        // printf("lhs: %d\n", lhs);
         if(lhs -1e-5 > constraintsSmall->rightSide[constraint]){
             verifyCompleteSolution = 1;
             free(setTemp);
             free(posTemp);
             break;
         }
+        
         free(setTemp);
         int *newSet = (int*)malloc(sizeof(int)*szAux);
         aux_t = 0;
@@ -753,7 +757,7 @@ void createInitialCoverGRASP(int *solution, int sz, cutSmall *constraintsSmall, 
                 aux_t++;
             }
         }
-        printf("Testes: %d %d\n", aux_t, szAux);
+       // printf("Testes: %d %d\n", aux_t, szAux);
         free(setId);
         setId  = newSet; 
         free(posTemp);
@@ -836,89 +840,58 @@ void SortVectorGreedy(int *vec, int sz, cutSmall *constraintsSmall, TNumberConst
     {
         el = constraintsSmall->ElementsConstraints[constraint] + vec[i];
         aux = constraintsSmall->Elements[el];
-        num_temp[i] = (float)precision * (((float)constraintsSmall->xAsterisc[aux]) / ((float)constraintsSmall->Coefficients[el]));
+        num_temp[i] =  ((float)constraintsSmall->xAsterisc[aux]) / ((float)constraintsSmall->Coefficients[el]);
     }
     quicksortTParameters(num_temp, vec, 0, sz);
     free(num_temp);
 }
 
-int *localSearch(int *solution, cutSmall *constraintsSmall, int precision, TNumberConstraints constraint)
+int *localSearch(int *solution, int sz, cutSmall *constraintsSmall, int precision, TNumberConstraints constraint)
 {
-    int i, aux1 = 0, aux2 = 0;
-    int sz = constraintsSmall->ElementsConstraints[constraint + 1] - constraintsSmall->ElementsConstraints[constraint];
-    int *solutionAux = (int *)malloc(sizeof(int) * sz);
-    int *vAtv = (int *)malloc(sizeof(int) * sz);
-    int *vNAtv = (int *)malloc(sizeof(int) * sz);
-    for (i = 0; i < sz; i++)
-    {
-        solutionAux[i] = solution[i];
-        if (solution[i] == 1)
-        {
-            vAtv[aux1] = i;
-            aux1++;
-        }
-        else
-        {
-            vNAtv[aux2] = i;
-            aux2++;
+    int *newSolution  = (int*)malloc( sizeof(int)*sz );
+    int *vNActived = (int*)malloc( sizeof(int)*sz );
+    int *vActived = (int*)malloc( sizeof(int)*sz );
+    int i, szActive = 0, szNActive = 0;
+    for(i = 0;i<sz;i++){
+        newSolution[i] = solution[i];
+        if(solution[i]==1){
+            vActived[szActive] = i;
+            szActive++;
+        }else{
+            vNActived[szNActive] = i;
+            szNActive++;
         }
     }
-    shuffleVectorInt(vAtv, aux1);
-    if (aux2 > 0)
-    {
-        SortVectorGreedy(vNAtv, aux2, constraintsSmall, constraint, precision);
-    }
-    solutionAux[vAtv[0]] = 0;
-    i = 0;
-    //int x = 0;
-    do
-    {
-        if (i == aux2)
-        {
-            free(solutionAux);
-            free(vAtv);
-            free(vNAtv);
-            return solution;
+    shuffleVectorInt(vActived,szActive);
+    newSolution[vActived[0]] = 0;
+    //if(szNActive>=2){
+    //    SortVectorGreedy(vNActived,szNActive,constraintsSmall,constraint,precision);    
+    //}
+    while(szNActive>0){
+        if(szNActive>1){
+            shuffleVectorInt(vNActived,szNActive);
         }
-        solutionAux[vNAtv[i]] = 1;
-        i++;
-
-    } while (verifySolutionCover(solutionAux, constraintsSmall, precision, constraint) == 0);
-
-    // do
-    // {
-    //     printf("aqui: %d\n", x);
-    //     x++;
-    //     if (aux2 > 0)
-    //     {
-    //         solutionAux[vNAtv[i]] = 1;
-    //         i++;
-    //         aux2--;
-    //     }
-    //     else
-    //     {
-    //         solutionAux[vAtv[j]] = 0;
-    //         j++;
-    //     }
-    //     if ((i == sz) || (j == aux1))
-    //     {
-    //         free(solutionAux);
-    //         free(vAtv);
-    //         free(vNAtv);
-    //         return solution;
-    //     }
-    // } while (verifySolutionCover(solutionAux, constraintsSmall, precision, constraint) == 0);
-
-    free(solution);
-    free(vAtv);
-    free(vNAtv);
-    return solutionAux;
+        int k_t = vNActived[szNActive-1];
+        newSolution[k_t] = 1;
+        szNActive--;
+        if(verifySolutionCover(newSolution,constraintsSmall,precision,constraint)==1){
+            free(solution);
+            free(vNActived);
+            free(vActived);
+            return newSolution;
+        }
+    }
+    free(newSolution);
+    free(vActived);
+    free(vNActived);
+    return solution;
 }
 
-void copyAndVerifyPoolSolution(int *solution, int sz, int *poolSolution, int szPoolCutsMax, int *numberSolutionAtual)
+void copyAndVerifyPoolSolution(int *solution, int sz, int *poolSolution, int *numberSolutionAtual)
 {
-    int i, j;
+    int i, j, atual;
     int flag = *numberSolutionAtual;
+    atual = flag;
     for (i = 0; i < *numberSolutionAtual; i++)
     {
         for (j = 0; j < sz; j++)
@@ -934,7 +907,7 @@ void copyAndVerifyPoolSolution(int *solution, int sz, int *poolSolution, int szP
     {
         for (j = 0; j < sz; j++)
         {
-            poolSolution[j + *numberSolutionAtual * sz] = solution[j];
+            poolSolution[j + atual*sz] = solution[j];
         }
         //printf("Aqui deu certo\n");
         (*numberSolutionAtual)++;
@@ -945,9 +918,8 @@ void copyAndVerifyPoolSolution(int *solution, int sz, int *poolSolution, int szP
     //}
 }
 
-int *createCoverGraspIndividual(cutSmall *constraintsSmall, int precision, TNumberConstraints constraint, int numberIteration, int szPoolCutsMax)
+int *createCoverGraspIndividual(cutSmall *constraintsSmall, int precision, TNumberConstraints constraint, int numberIteration, int szPoolCutsMax, float alpha)
 {
-
     int sz = constraintsSmall->ElementsConstraints[constraint + 1] - constraintsSmall->ElementsConstraints[constraint];
     int *solution = (int *)malloc(sizeof(int) * sz);
     int *poolSolution = (int *)malloc(sizeof(int) * sz * szPoolCutsMax);
@@ -957,19 +929,36 @@ int *createCoverGraspIndividual(cutSmall *constraintsSmall, int precision, TNumb
     {
         poolSolution[ite] = 0;
     }
-
-    createInitialCoverGRASP(solution, sz, constraintsSmall, precision, constraint, 1);
+    createInitialCoverGRASP(solution, sz, constraintsSmall, precision, constraint, alpha);
     ite = 0;
+    //printf("numberIteration: %d",numberIteration);
+    if(numberIteration==0){
+        copyAndVerifyPoolSolution(solution, sz, poolSolution, &nPoolSolution);
+    }
     while (ite < numberIteration)
     {
-        solution = localSearch(solution, constraintsSmall, precision, constraint);
-        copyAndVerifyPoolSolution(solution, sz, poolSolution, szPoolCutsMax, &nPoolSolution);
+        solution = localSearch(solution, sz, constraintsSmall, precision, constraint);
+        //     printf("Sol:")  ;
+        // int aux = constraintsSmall->ElementsConstraints[constraint];
+        // int i;
+        // for (i = 0; i< sz; i++ ){
+        //    printf(" %d %d\t", constraintsSmall->Coefficients[aux + i], solution[i]);
+        // }
+        // printf(" <= %d\n", constraintsSmall->rightSide[constraint]);
+        
+        copyAndVerifyPoolSolution(solution, sz, poolSolution, &nPoolSolution);
+
+        //printf("nPOOL : %d\n", nPoolSolution);
         if (nPoolSolution == szPoolCutsMax)
         {
             break;
         }
         ite++;
     }
+    // int i;
+    // for(i=0;i<sz*szPoolCutsMax;i++){
+    //     printf("solution %d: %d\n", constraint,poolSolution[i]);
+    // }
     free(solution);
     return poolSolution;
 }
@@ -1160,7 +1149,7 @@ int *creatFillBagGrasp(int *poolSolution, cutSmall *constraintsSmall, int constr
 
 #ifdef DEBUG
 
-cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **nameConstraints, char **nameVariables, double *sol, int szPoolCutsMax, int nIterationGrasp)
+cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **nameConstraints, char **nameVariables, double *sol, int szPoolCutsMax, int nIterationGrasp, float alpha)
 {
     printf("CC with debug\n");
     //Cover_gpu *h_cover_new = AllocationStructCover(h_cover->cont*qnt_Cover_per_Thread,h_cover->numberConstraints*qnt_Cover_per_Thread);
@@ -1182,7 +1171,12 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
     //contInitial = newConstraintsSmall->cont;
     for (i = 0; i < cutsCover->numberConstraints; i++)
     {
-        if (cutsCover->rightSide[i] <= 1)
+        int lhs = 0;
+        for(j = newConstraintsSmall->ElementsConstraints[i];j<newConstraintsSmall->ElementsConstraints[i+1];j++){
+            lhs += newConstraintsSmall->Coefficients[j]; 
+        }
+
+        if ((cutsCover->rightSide[i] <= 1)||(lhs <= cutsCover->rightSide[i]) )
         {
             continue;
         }
@@ -1190,7 +1184,9 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
         c_XSolution = 0;
         int szConstraint = cutsCover->ElementsConstraints[i + 1] - cutsCover->ElementsConstraints[i];
         cutCover *cutsCoverSolution = AllocStrCover(szConstraint * szPoolCutsMax, szPoolCutsMax);
-        int *poolSolution = createCoverGraspIndividual(newConstraintsSmall, precision, i, nIterationGrasp, szPoolCutsMax);
+
+       
+        int *poolSolution = createCoverGraspIndividual(newConstraintsSmall, precision, i, nIterationGrasp, szPoolCutsMax, alpha);
         // for (k = 0; k < szPoolCutsMax; k++)
         // {
         //     for (w = 0; w < szConstraint; w++)
@@ -1199,7 +1195,11 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
         //     }
         //     printf("%d\n", cutsCover->rightSide[i]);
         // }
+        
         int *fillBag = creatFillBagGrasp(poolSolution, newConstraintsSmall, i, szPoolCutsMax, szConstraint);
+        // for(itePool=0; itePool<szPoolCutsMax;itePool++){
+        //     printf("FillBag: %d\n", fillBag[itePool]);
+        // }
         cutsCoverSolution->ElementsConstraints[0] = 0;
         for (itePool = 0; itePool < szPoolCutsMax; itePool++)
         {
@@ -1248,10 +1248,10 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
             {
 
                 delta = a_barra - (double)n_coef[w];
-                if ((double)k * delta < phi)
+                if ( ((double)k * delta) < phi)
                 {
                     a_barra = (double)n_coef[w];
-                    phi = phi - (double)k * delta;
+                    phi = phi - ( (double)k * delta );
                 }
                 else
                 {
@@ -1265,7 +1265,7 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
             {
                 a_barra = (double)b / (double)qnt;
             }
-
+            //printf("a_barra: %f\n", a_barra);
             int *c_menus = (int *)malloc(sizeof(int) * qnt);
             int *c_mais = (int *)malloc(sizeof(int) * qnt);
             double *S_barra = (double *)malloc(sizeof(double) * (qnt + 1));
@@ -1299,11 +1299,18 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
                     aux[w] = a_barra;
                 }
             }
+            
             quicksortDouble(aux, 0, qnt);
+            // printf("valores:");
+            // for(w=0;w<qnt;w++){
+            //     printf("%f \t",aux[w]);
+            // }
+            // printf("\n");
+
             S_barra[0] = 0;
             for (w = 1; w < qnt; w++)
             {
-                S_barra[w] = S_barra[w - 1] + aux[w];
+                S_barra[w] = S_barra[w - 1] + aux[w-1];
             }
             S_barra[qnt] = cutsCover->rightSide[i];
 
@@ -1318,10 +1325,10 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
             //     id3++;
             // }
 
-            // for(w=0;w<=qnt;w++){
-            //     printf("S(%d) = %lf\n", w, S_barra[w]);
-            // }
-            // printf("a_barra: %lf\n", a_barra);
+            //  for(w=0;w<=qnt;w++){
+            //      printf("S(%d) = %lf\n", w, S_barra[w]);
+            //  }
+            //  printf("a_barra: %lf\n", a_barra);
             // getchar();
 
             int ini = 0;
@@ -1341,8 +1348,8 @@ cutFull *runCC_mainCPuDebug(cutFull *constraintsFull, int precision, char **name
                 }
                 if (flag == 0)
                 {
-                    printf("Aqui!");
-                    getchar();
+                    printf("Aqui: Coeficiente maior que B!\n");
+                    //getchar();
                     cutsCoverSolution->Coefficients[c_XSolution] = cutsCover->Coefficients[w];
                 }
                 c_XSolution++;

@@ -19,7 +19,7 @@ int main(int argc, const char *argv[])
 {
     int i;
     int cg1 = 0, cg2 = 0, cc = 0;
-    if (argc < 13)
+    if (argc < 15)
     {
         printf("Number of parameters invalided\n");
         printf("[1] - Instance Name \n");
@@ -31,7 +31,8 @@ int main(int argc, const char *argv[])
         printf("[7] - max Denominator of Phase 2\n");
         printf("[8-11] - weight's common,  of Phase 2\n");
         printf("[12] - number of cc tests\n");
-        printf("[13] - number iteration Grasp CC\n");
+        printf("[13] - number iteration Local Search Grasp CC\n");
+        printf("[14] - alpha GRASP");
         return 0;
     }
     for (i = 0; i < argc; i++)
@@ -63,11 +64,9 @@ int main(int argc, const char *argv[])
     float weightVariablesFrac = atof(argv[11]);
     int szPoolCutsMaxCC = atoi(argv[12]);
     int nIterationCCGrasp = atoi(argv[13]);
-
+    float alpha = atof(argv[14]);
     strcat(nameInst, argv[1]);
     strcat(nameFileInstance, argv[1]);
-
-
 
     LinearProgram *lp = lp_create();
     lp_read(lp, nameFileInstance);
@@ -99,16 +98,20 @@ int main(int argc, const char *argv[])
 //      if(sol[i]!=0.0)
 //         getchar();
 //  }
-#ifdef DEBUG
+//#ifdef DEBUG
     lp_set_max_solutions(lp, 1);
     lp_optimize(lp);
     lp_write_sol(lp, "../sol/solutionTest.sol");
     double *sol = readSolFile("../sol/solutionTest.sol", nVariables);
+    for (i=0;i<nVariables;i++){
+        printf("x_%d = %f\t", i+1,sol[i]);
+    }
+    printf("\n");
 
-#endif // DEBUG
-    int *typeVariables = (int*)malloc(sizeof(int)*nVariables);
-    double *lbVariables = (double*)malloc(sizeof(double)*nVariables);
-    double *ubVariables = (double*)malloc(sizeof(double)*nVariables);
+//#endif // DEBUG
+    int *typeVariables = (int *)malloc(sizeof(int) * nVariables);
+    double *lbVariables = (double *)malloc(sizeof(double) * nVariables);
+    double *ubVariables = (double *)malloc(sizeof(double) * nVariables);
     cutFull *constraintsOriginal = fillStructPerLP(lp, nameConstraints, nameVariables, typeVariables, lbVariables, ubVariables);
 #ifdef DEBUG
 
@@ -134,9 +137,8 @@ int main(int argc, const char *argv[])
     TNumberConstraints numberAuxConstraints;
     TNumberConstraints totalCuts;
     lp_optimize_as_continuous(lp);
-     double iniObjSol = lp_obj_value(lp);
-    printf("Solution initial: %f \n",iniObjSol);
-
+    double iniObjSol = lp_obj_value(lp);
+    printf("Solution initial: %f \n", iniObjSol);
 
     while (_time > 1)
     {
@@ -196,28 +198,28 @@ int main(int argc, const char *argv[])
         }
         if (cc == 1)
         {
-
-            int *binaryConstraints = returnBinaryConstraints(constraintsOriginal,typeVariables);
+            int *binaryConstraints = returnBinaryConstraints(constraintsOriginal, typeVariables); // verifica quais restrições é possível usar no método
             int constraintsUsed = 0;
-            for(i=0;i<constraintsOriginal->numberConstraints;i++){
-                if(binaryConstraints[i]!=0){
+            for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+            {
+                if (binaryConstraints[i] != 0)
+                {
                     constraintsUsed++;
                 }
                 //printf("binaryConstraints: %d\n", binaryConstraints[i]);
             }
-            //printf("Number Constraints Posible: %d\n", constraintsUsed);
-            
-            cutFull *constraintsBinary = convertBinaryConstraints(constraintsOriginal,binaryConstraints,typeVariables,lbVariables,ubVariables);
+         //   printf("Number Constraints Posible: %d\n", constraintsUsed);
+
+            cutFull *constraintsBinary = convertBinaryConstraints(constraintsOriginal, binaryConstraints, typeVariables, lbVariables, ubVariables);
             printf("Constraints Original: %d \n new Constraints: %d\n", constraintsOriginal->numberConstraints, constraintsBinary->numberConstraints);
             int nInitialBinary = constraintsBinary->numberConstraints;
             int *convertVariables = (int *)malloc(sizeof(int) * constraintsBinary->cont);
             numberVariablesInitial = constraintsBinary->numberVariables;
-
             constraintsBinary = removeNegativeCoefficientsAndSort(constraintsBinary, convertVariables, precision);
             // int j,el_test;
             // double lhs_test;
 
- /*          for (i = 0; i < constraintsBinary->numberConstraints; i++)
+            /*          for (i = 0; i < constraintsBinary->numberConstraints; i++)
             {
                 lhs_test = 0;
                 for (j = constraintsBinary->ElementsConstraints[i]; j < constraintsBinary->ElementsConstraints[i + 1]; j++)
@@ -235,17 +237,16 @@ int main(int argc, const char *argv[])
                 }
 
             }*/
-            //showStructFull(constraintsBinary,nameConstraints,nameVariables);
+            // showStructFull(constraintsBinary,nameConstraints,nameVariables);
+            // getchar();
             // for(i=0;i<constraintsBinary->numberVariables;i++){
             //     printf("%s %f %f-- ", nameVariables[i],lbVariables[i], ubVariables[i]);
             // }
-           // getchar();
+            // getchar();
 
-
-            
             numberAux = constraintsBinary->numberConstraints;
 #ifdef DEBUG
-            constraintsBinary = runCC_mainCPuDebug(constraintsBinary, precision, nameConstraints, nameVariables, sol, szPoolCutsMaxCC, nIterationCCGrasp);
+            constraintsBinary = runCC_mainCPuDebug(constraintsBinary, precision, nameConstraints, nameVariables, sol, szPoolCutsMaxCC, nIterationCCGrasp, alpha);
 #else
             constraintsBinary = runCC_mainCPu(constraintsBinary, precision, szPoolCutsMaxCC);
 #endif // DEBUG
@@ -271,31 +272,32 @@ int main(int argc, const char *argv[])
             numberCutsCC += numberAux;
 
             freeStrCutFull(constraintsBinary);
-            // showStructFull(constraintsOriginal,nameConstraints,nameVariables);
-            // getchar();
-#ifdef DEBUG
-            for (i = 0; i < constraintsOriginal->numberConstraints; i++)
-            {
-                int very = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
-
-                if (very == 0)
-                {
-                    printf("validado depois: %d %s\n", very, nameConstraints[i]);
-                    //getchar();
-                }
-            }
-#endif
+            //showStructFull(constraintsOriginal,nameConstraints,nameVariables);
+            //getchar();
             //showStructFull(constraintsOriginal,nameConstraints,nameVariables);
             free(convertVariables);
             free(binaryConstraints);
         }
+
+        int *verifyTest = (int *)malloc(sizeof(int) * constraintsOriginal->numberConstraints);
+        for (i = 0; i < constraintsOriginal->numberConstraints; i++)
+        {
+            verifyTest[i] = verifyCutsValidatedPerSolutionInteger(constraintsOriginal, i, sol, nameVariables);
+
+            if (verifyTest[i] == 0)
+            {
+                printf("validado depois: %d %s\n", verifyTest[i], nameConstraints[i]);
+                //getchar();
+            }
+        }
+
         _time = ((double)timeMax - (omp_get_wtime() - startT));
         totalCuts = constraintsOriginal->numberConstraints - numberAuxConstraints;
         printf("Cuts total: %d\n", totalCuts);
         printf("Depois: %d \n", constraintsOriginal->numberConstraints);
         if (totalCuts >= 0)
         {
-            insertConstraintsLP(lp, constraintsOriginal, numberAuxConstraints, nameConstraints);
+            insertConstraintsLP(lp, constraintsOriginal, numberAuxConstraints, nameConstraints, verifyTest);
             lp_write_lp(lp, "danilo.lp");
             lp_optimize_as_continuous(lp);
             double *xTemp = lp_x(lp);
@@ -306,6 +308,7 @@ int main(int argc, const char *argv[])
 
             printf("value: %f\n", lp_obj_value(lp));
         }
+        free(verifyTest);
     }
     //  showStructFull(constraintsOriginal,nameConstraints,nameVariables);
 

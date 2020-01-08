@@ -976,7 +976,7 @@ int *vectorNonRepeteadNonDominated(cutFull *constraintsOriginal, int nConstraint
     {
         isRepeat[i] = 0;
     }
-    int *v_aux = (int *)malloc(sizeof(int) * constraintsOriginal->numberVariables);
+    int *v_aux = (int *)malloc(sizeof(int) * (constraintsOriginal->numberVariables+1) );
     for (i = nConstraintsInitial; i < constraintsOriginal->numberConstraints; i++)
     {
         k = 0;
@@ -1007,7 +1007,7 @@ int *vectorNonRepeteadNonDominated(cutFull *constraintsOriginal, int nConstraint
     return isRepeat;
 }
 
-void insertConstraintsLP(LinearProgramPtr lp, cutFull *constraintsOriginal, int nConstrainsInitial, char **nameConstraints)
+void insertConstraintsLP(LinearProgramPtr lp, cutFull *constraintsOriginal, int nConstrainsInitial, char **nameConstraints, int *verifyBug)
 {
     int i, j, w;
     int *idx;
@@ -1015,7 +1015,7 @@ void insertConstraintsLP(LinearProgramPtr lp, cutFull *constraintsOriginal, int 
     int *cutsNonInserted = vectorNonRepeteadNonDominated(constraintsOriginal, nConstrainsInitial);
     for (i = nConstrainsInitial; i < constraintsOriginal->numberConstraints; i++)
     {
-        if (cutsNonInserted[i] == 1)
+        if ((cutsNonInserted[i] == 1)||(verifyBug[i]==0))
         {
             continue;
         }
@@ -1070,7 +1070,7 @@ int verifyCutsValidatedPerSolutionInteger(cutFull *constraintsOriginal, int cut,
     //     lhs -= 1e-3;
     // }
 
-    if (lhs - 1e-2 <= constraintsOriginal->rightSide[cut])
+    if (lhs - 1e-5 <= constraintsOriginal->rightSide[cut])
     {
         return 1;
     }
@@ -1165,15 +1165,15 @@ int *returnBinaryConstraints(cutFull *constraintsOriginal, int *typeVariables)
         }
         if (qntBin < 3)
         {
-            BinaryConstraints[i] = 0;
+            BinaryConstraints[i] = 0; // restrição que não vale a pena transformar
         }
         else if (qntNBin == 0)
         {
-            BinaryConstraints[i] = 1;
+            BinaryConstraints[i] = 1; // restrição com todos os elementos binários
         }
         else
         {
-            BinaryConstraints[i] = 2;
+            BinaryConstraints[i] = 2; // restrição vale a pena transformar em binária
         }
     }
     return BinaryConstraints;
