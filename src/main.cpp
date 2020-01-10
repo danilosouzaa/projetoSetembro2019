@@ -32,7 +32,8 @@ int main(int argc, const char *argv[])
         printf("[8-11] - weight's common,  of Phase 2\n");
         printf("[12] - number of cc tests\n");
         printf("[13] - number iteration Local Search Grasp CC\n");
-        printf("[14] - alpha GRASP");
+        printf("[14] - alpha GRASP\n");
+        printf("[15] - minimal\n");
         return 0;
     }
     for (i = 0; i < argc; i++)
@@ -65,6 +66,8 @@ int main(int argc, const char *argv[])
     int szPoolCutsMaxCC = atoi(argv[12]);
     int nIterationCCGrasp = atoi(argv[13]);
     float alpha = atof(argv[14]);
+    int  minimal = atoi(argv[15]);// 0 non minimal - 1 minimal
+    
     strcat(nameInst, argv[1]);
     strcat(nameFileInstance, argv[1]);
 
@@ -246,7 +249,7 @@ int main(int argc, const char *argv[])
 
             numberAux = constraintsBinary->numberConstraints;
 #ifdef DEBUG
-            constraintsBinary = runCC_mainCPuDebug(constraintsBinary, precision, nameConstraints, nameVariables, sol, szPoolCutsMaxCC, nIterationCCGrasp, alpha);
+            constraintsBinary = runCC_mainCPuDebug(constraintsBinary, precision, nameConstraints, nameVariables, sol, szPoolCutsMaxCC, nIterationCCGrasp, alpha, minimal);
 #else
             constraintsBinary = runCC_mainCPu(constraintsBinary, precision, szPoolCutsMaxCC);
 #endif // DEBUG

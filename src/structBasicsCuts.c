@@ -1084,7 +1084,7 @@ int verifyCutsValidatedPerSolutionInteger(cutFull *constraintsOriginal, int cut,
 double *readSolFile(const char *name, int nVariables)
 {
     double *sol = (double *)malloc(sizeof(double) * nVariables);
-    int idx, i;
+    int idx = -1, i;
     double value, aux;
     char n[255];
     for (i = 0; i < nVariables; i++)
@@ -1102,9 +1102,12 @@ double *readSolFile(const char *name, int nVariables)
             {
                 fscanf(f, "%[^\n]", n);
                 flag = 1;
+                continue;
             }
             fscanf(f, "%d %s %lf %lf\n", &idx, n, &value, &aux);
-            sol[idx] = value;
+            if(idx !=-1){
+                    sol[idx] = value;
+            }
         }
     }
     return sol;
